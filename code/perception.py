@@ -3,18 +3,20 @@ import cv2
 
 # Identify pixels above the threshold
 # Threshold of RGB > 160 does a nice job of identifying ground pixels only
-def color_thresh(img, rgb_thresh=(160, 160, 160)):
+def color_thresh(img, rgb_thresh_min=(160, 160, 160), rgb_thresh_max = (255,255,255)):
     # Create an array of zeros same xy size as img, but single channel
     color_select = np.zeros_like(img[:,:,0])
     # Require that each pixel be above all three threshold values in RGB
     # above_thresh will now contain a boolean array with "True"
     # where threshold was met
-    above_thresh = (img[:,:,0] > rgb_thresh[0]) \
-                & (img[:,:,1] > rgb_thresh[1]) \
-                & (img[:,:,2] > rgb_thresh[2])
+    within_thresh = (img[:,:,0] > rgb_thresh_min[0]) \
+            & (img[:,:,1] > rgb_thresh_min[1]) \
+            & (img[:,:,2] > rgb_thresh_min[2]) \
+            & (img[:,:,0] < rgb_thresh_max[0]) \
+            & (img[:,:,1] < rgb_thresh_max[1]) \
+            & (img[:,:,2] < rgb_thresh_max[2])
     # Index the array of zeros with the boolean array and set to 1
-    color_select[above_thresh] = 1
-    # Return the binary image
+    color_select[within_thresh] = 1
     return color_select
 
 # Define a function to convert from image coords to rover coords
@@ -106,16 +108,27 @@ def perception_step(Rover):
     # 2) Apply perspective transform
     warped, mask = perspect_transform(Rover.img, source, destination)
     # 3) Apply color threshold to identify navigable terrain/obstacles/rock samples
-    threshed = color_thresh(warped)
-    obs_map = np.absolute(np.float32(threshed) - 1) * mask
+    rgb_nav_min = (170,170,170)
+    rgb_nav_max = (255, 255, 255)
+    navigable_threshed = color_thresh(warped, rgb_nav_min, rgb_nav_max)
+
+    rgb_obs_min = (0,0,0)
+    rgb_obs_max = (170,170,170)
+    threshed_obstacles = color_thresh(warped,rgb_obs_min, rgb_obs_max)
+
+    rgb_rock_min = (110, 110, 5)
+    rgb_rock_max = (210, 210, 145)
+    threshed_rocks = color_thresh(warped, rgb_rock_min, rgb_rock_max)
+
+    obs_map = np.absolute(np.float32(navigable_threshed) - 1) * mask
     # 4) Update Rover.vision_image (this will be displayed on left side of screen)
         # Example: Rover.vision_image[:,:,0] = obstacle color-thresholded binary image
         #          Rover.vision_image[:,:,1] = rock_sample color-thresholded binary image
         #          Rover.vision_image[:,:,2] = navigable terrain color-thresholded binary image
-    Rover.vision_image[:,:,2] = threshed * 255
+    Rover.vision_image[:,:,2] = navigable_threshed * 255
     Rover.vision_image[:,:,0] = obs_map * 255
     # 5) Convert map image pixel values to rover-centric coords
-    xpix, ypix = rover_coords(threshed)
+    xpix, ypix = rover_coords(navigable_threshed)
     # 6) Convert rover-centric pixel values to world coordinates
     world_size = Rover.worldmap.shape[0]
     scale = 2 * dst_size
