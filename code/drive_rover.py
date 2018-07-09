@@ -18,10 +18,10 @@ import matplotlib.image as mpimg
 import time
 
 # Import functions for perception and decision making
-from perception import perception_step
-from decision import decision_step
-from supporting_functions import update_rover, create_output_images
-# Initialize socketio server and Flask application 
+from perception import perception_step # perception.py included in the project repository
+from decision import decision_step # we have to modify the function decision_step()
+from supporting_functions import update_rover, create_output_images # not neccesary to modify
+# Initialize socketio server and Flask application
 # (learn more at: https://python-socketio.readthedocs.io/en/latest/)
 sio = socketio.Server()
 app = Flask(__name__)
@@ -31,11 +31,12 @@ app = Flask(__name__)
 # and y-axis increasing downward.
 ground_truth = mpimg.imread('../calibration_images/map_bw.png')
 # This next line creates arrays of zeros in the red and blue channels
-# and puts the map into the green channel.  This is why the underlying 
+# and puts the map into the green channel.  This is why the underlying
 # map output looks green in the display image
 ground_truth_3d = np.dstack((ground_truth*0, ground_truth*255, ground_truth*0)).astype(np.float)
 
 # Define RoverState() class to retain rover state parameters
+# usdate RoverState() object from within perception_step() function
 class RoverState():
     def __init__(self):
         self.start_time = None # To record the start time of navigation
@@ -49,7 +50,7 @@ class RoverState():
         self.steer = 0 # Current steering angle
         self.throttle = 0 # Current throttle value
         self.brake = 0 # Current brake value
-        self.nav_angles = None # Angles of navigable terrain pixels
+        self.nav_angles = None # Angles of navigable terrain pixels # update this!
         self.nav_dists = None # Distances of navigable terrain pixels
         self.ground_truth = ground_truth_3d # Ground truth worldmap
         self.mode = 'forward' # Current mode (can be forward or stop)
@@ -65,11 +66,11 @@ class RoverState():
         # Image output from perception step
         # Update this image to display your intermediate analysis steps
         # on screen in autonomous mode
-        self.vision_image = np.zeros((160, 320, 3), dtype=np.float) 
+        self.vision_image = np.zeros((160, 320, 3), dtype=np.float)
         # Worldmap
         # Update this image with the positions of navigable terrain
         # obstacles and rock samples
-        self.worldmap = np.zeros((200, 200, 3), dtype=np.float) 
+        self.worldmap = np.zeros((200, 200, 3), dtype=np.float)
         self.samples_pos = None # To store the actual sample positions
         self.samples_to_find = 0 # To store the initial count of samples
         self.samples_located = 0 # To store number of samples located on map
@@ -77,7 +78,7 @@ class RoverState():
         self.near_sample = 0 # Will be set to telemetry value data["near_sample"]
         self.picking_up = 0 # Will be set to telemetry value data["picking_up"]
         self.send_pickup = False # Set to True to trigger rock pickup
-# Initialize our rover 
+# Initialize our rover
 Rover = RoverState()
 
 # Variables to track frames per second (FPS)
@@ -116,7 +117,7 @@ def telemetry(sid, data):
             out_image_string1, out_image_string2 = create_output_images(Rover)
 
             # The action step!  Send commands to the rover!
- 
+
             # Don't send both of these, they both trigger the simulator
             # to send back new telemetry so we must only send one
             # back in respose to the current telemetry data.
@@ -173,7 +174,7 @@ def send_control(commands, image_string1, image_string2):
         data,
         skip_sid=True)
     eventlet.sleep(0)
-# Define a function to send the "pickup" command 
+# Define a function to send the "pickup" command
 def send_pickup():
     print("Picking up")
     pickup = {}
@@ -192,7 +193,7 @@ if __name__ == '__main__':
         help='Path to image folder. This is where the images from the run will be saved.'
     )
     args = parser.parse_args()
-    
+
     #os.system('rm -rf IMG_stream/*')
     if args.image_folder != '':
         print("Creating image folder at {}".format(args.image_folder))
@@ -204,7 +205,7 @@ if __name__ == '__main__':
         print("Recording this run ...")
     else:
         print("NOT recording this run ...")
-    
+
     # wrap Flask application with socketio's middleware
     app = socketio.Middleware(sio, app)
 
