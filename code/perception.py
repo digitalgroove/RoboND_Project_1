@@ -120,7 +120,7 @@ def perception_step(Rover):
     rgb_rock_max = (210, 210, 145)
     threshed_rocks = color_thresh(warped, rgb_rock_min, rgb_rock_max)
 
-    obs_map = np.absolute(np.float32(navigable_threshed) - 1) * mask
+    obs_map = np.float32(threshed_obstacles) * mask
     # 4) Update Rover.vision_image (this will be displayed on left side of screen)
         # Example: Rover.vision_image[:,:,0] = obstacle color-thresholded binary image
         #          Rover.vision_image[:,:,1] = rock_sample color-thresholded binary image
