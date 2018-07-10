@@ -105,7 +105,7 @@ def remap_values(value, inMin, inMax, outMin, outMax):
 def mask_navigable(nav_binary):
 
     H_start_percent = 0 # percent value
-    H_end_percent = 55 # percent value
+    H_end_percent = 60 # percent value
     V_start_percent = 0 # percent value
     V_end_percent = 100 # percent value
 
