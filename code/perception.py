@@ -138,7 +138,7 @@ def perception_step(Rover):
     # 2) Apply perspective transform
     warped, mask = perspect_transform(Rover.img, source, destination)
     # 3) Apply color threshold to identify navigable terrain/obstacles/rock samples
-    rgb_nav_min = (170,170,170)
+    rgb_nav_min = (160,160,160)
     rgb_nav_max = (255, 255, 255)
     navigable_threshed = color_thresh(warped, rgb_nav_min, rgb_nav_max)
 
@@ -173,22 +173,23 @@ def perception_step(Rover):
         # Example: Rover.worldmap[obstacle_y_world, obstacle_x_world, 0] += 1
         #          Rover.worldmap[rock_y_world, rock_x_world, 1] += 1
         #          Rover.worldmap[navigable_y_world, navigable_x_world, 2] += 1
+    # check that the rover is on even ground
+    if ((Rover.pitch <= 1) or (Rover.pitch >= 359)) and ((Rover.roll <= 1) or (Rover.roll >= 359)):
+        # to account for overlap between the two
+        Rover.worldmap[navigable_y_world, navigable_x_world, 2] += 1   # worldmap in the blue channel (2) we will update to be 255 where we find nav terrain
+        Rover.worldmap[obstacle_y_world, obstacle_x_world, 0] += 1 # worldmap in the red channel (0) will be 255 where we find obstacles
 
-    # to account for overlap between the two
-    Rover.worldmap[navigable_y_world, navigable_x_world, 2] += 1   # worldmap in the blue channel (2) we will update to be 255 where we find nav terrain
-    Rover.worldmap[obstacle_y_world, obstacle_x_world, 0] += 1 # worldmap in the red channel (0) will be 255 where we find obstacles
+        #obs_pix = data.worldmap[:,:, 0] > 1 # if the red channel is > 0 (navigable terrain) I will just assume it is and...
+        #data.worldmap[obs_pix,2] = 0 # ...set the blue channel to zero (discard the obstacles)
+        #data.worldmap[obs_pix,0] = 255 # ...set the red channel to 255
 
-    #obs_pix = data.worldmap[:,:, 0] > 1 # if the red channel is > 0 (navigable terrain) I will just assume it is and...
-    #data.worldmap[obs_pix,2] = 0 # ...set the blue channel to zero (discard the obstacles)
-    #data.worldmap[obs_pix,0] = 255 # ...set the red channel to 255
+        nav_pix = Rover.worldmap[:,:, 2] > 2 # if the blue channel is > 0 (navigable terrain) I will just assume it is and...
+        Rover.worldmap[nav_pix,0] = 0 # ...set the red channel to zero (discard the obstacles)
+        Rover.worldmap[nav_pix,2] = 255 # ...set the blue channel to 255
 
-    nav_pix = Rover.worldmap[:,:, 2] > 2 # if the blue channel is > 0 (navigable terrain) I will just assume it is and...
-    Rover.worldmap[nav_pix,0] = 0 # ...set the red channel to zero (discard the obstacles)
-    Rover.worldmap[nav_pix,2] = 255 # ...set the blue channel to 255
-
-    obs_pix = Rover.worldmap[:,:, 0] > 6 # if the red channel is > 0 (navigable terrain) I will just assume it is and...
-    #data.worldmap[obs_pix,2] = 0 # ...set the blue channel to zero (discard the obstacles)
-    Rover.worldmap[obs_pix,0] = 255 # ...set the red channel to 255
+        obs_pix = Rover.worldmap[:,:, 0] > 6 # if the red channel is > 0 (navigable terrain) I will just assume it is and...
+        #data.worldmap[obs_pix,2] = 0 # ...set the blue channel to zero (discard the obstacles)
+        Rover.worldmap[obs_pix,0] = 255 # ...set the red channel to 255
     # 8) Convert rover-centric pixel positions to polar coordinates
     # Update Rover pixel distances and angles
         # Rover.nav_dists = rover_centric_pixel_distances
