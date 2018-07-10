@@ -90,6 +90,36 @@ def find_rocks(img, levels=(110,110, 50)):
 
     return color_select
 
+def remap_values(value, inMin, inMax, outMin, outMax):
+    # Figure out how 'wide' each range is
+    inSpan = inMax - inMin
+    outSpan = outMax - outMin
+
+    # Convert the left range into a 0-1 range (float)
+    valueScaled = float(value - inMin) / float(inSpan)
+
+    # Convert the 0-1 range into a value in the right range.
+    return outMin + (valueScaled * outSpan)
+
+# Define a function to mask the navigable terrain pixels
+def mask_navigable(nav_binary):
+
+    H_start_percent = 0 # percent value
+    H_end_percent = 55 # percent value
+    V_start_percent = 0 # percent value
+    V_end_percent = 100 # percent value
+
+    driving_mask = np.zeros((nav_binary.shape[0], nav_binary.shape[1])) # initialize matrix of zeros
+
+    H_start_col = int(round(remap_values(H_start_percent, 0, 100, 0, 0)))
+    H_end_col = int(round(remap_values(H_end_percent, 0, 100, 0, nav_binary.shape[1])))
+    V_start_col = int(round(remap_values(V_start_percent, 0, 100, 0, 0)))
+    V_end_col = int(round(remap_values(V_end_percent, 0, 100, 0, nav_binary.shape[0])))
+    driving_mask[V_start_col:V_end_col,H_start_col:H_end_col] = 1 # select range of rows and columns
+
+    mask_nav = nav_binary * driving_mask
+
+    return mask_nav
 
 # Apply the above functions in succession and update the Rover state accordingly
 def perception_step(Rover):
@@ -121,15 +151,19 @@ def perception_step(Rover):
     threshed_rocks = color_thresh(warped, rgb_rock_min, rgb_rock_max)
 
     obs_map = np.float32(threshed_obstacles) * mask
+
+    navigable_masked = mask_navigable(navigable_threshed)
+
     # 4) Update Rover.vision_image (this will be displayed on left side of screen)
         # Example: Rover.vision_image[:,:,0] = obstacle color-thresholded binary image
         #          Rover.vision_image[:,:,1] = rock_sample color-thresholded binary image
         #          Rover.vision_image[:,:,2] = navigable terrain color-thresholded binary image
-    Rover.vision_image[:,:,2] = navigable_threshed * 255
+    Rover.vision_image[:,:,2] = navigable_masked * 255
     Rover.vision_image[:,:,0] = obs_map * 255
     # 5) Convert map image pixel values to rover-centric coords
     x_nav_pix, y_nav_pix = rover_coords(navigable_threshed)
     x_obs_pix, y_obs_pix = rover_coords(threshed_obstacles)
+    x_navM_pix, y_navM_pix = rover_coords(navigable_masked)
     # 6) Convert rover-centric pixel values to world coordinates
     world_size = Rover.worldmap.shape[0]
     scale = 2 * dst_size
@@ -161,7 +195,8 @@ def perception_step(Rover):
         # Rover.nav_angles = rover_centric_angles
     dist_nav, angles_nav = to_polar_coords(x_nav_pix, y_nav_pix)
     dist_obs, angles_obs = to_polar_coords(x_obs_pix, y_obs_pix)
-    Rover.nav_angles = angles_nav
+    dist_navM, angles_navM = to_polar_coords(x_navM_pix, y_navM_pix)
+    Rover.nav_angles = angles_navM
     Rover.obs_angles = angles_obs
 
     #See if we can find some rocks
