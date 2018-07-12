@@ -18,12 +18,12 @@ def decision_step(Rover):
                 Rover.mode = 'Go to rock'
                 # Set steering to average angle clipped to the range +/- 15
                 Rover.steer = np.clip(np.mean(Rover.rock_ang * 180/np.pi), -15, 15)
-                if Rover.vel > 0.6:
+                if Rover.vel > 0.8:
                     Rover.action = 'breaking'
                     Rover.throttle = 0
                     Rover.brake = Rover.brake_set
                     Rover.steer = 0
-                if Rover.vel < 0.4:
+                elif Rover.vel < 0.4:
                     Rover.action = 'throttle to rock'
                     # Set throttle value to throttle setting
                     Rover.brake = 0
@@ -32,6 +32,12 @@ def decision_step(Rover):
                     Rover.action = 'coast to rock'
                     Rover.brake = 0
                     Rover.throttle = 0
+                if Rover.near_sample:
+                    Rover.action = 'breaking'
+                    Rover.throttle = 0
+                    Rover.brake = Rover.brake_set
+                    Rover.steer = 0
+
             # If no rocks where found check the extent of navigable terrain
             elif len(Rover.nav_angles) >= Rover.stop_forward:
                 # If mode is forward, navigable terrain looks good
@@ -91,7 +97,12 @@ def decision_step(Rover):
             Rover.action = 'else 1...'
             if Rover.mode == 'Go to rock':
                 Rover.steer = Rover.steer_cache
-                if Rover.elsecounter > 10:
+                if Rover.vel > 0.6:
+                    Rover.action = 'else 1 breaking'
+                    Rover.throttle = 0
+                    Rover.brake = Rover.brake_set
+                    Rover.steer = 0
+                if Rover.elsecounter > 60:
                     Rover.mode = 'forward'
                     Rover.elsecounter = 0
     else:
