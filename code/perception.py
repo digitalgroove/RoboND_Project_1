@@ -202,12 +202,14 @@ def perception_step(Rover):
 
     #See if we can find some rocks
     rock_map = find_rocks(warped, levels=(110,110,50))
-    if rock_map.any():
-        rock_x, rock_y = rover_coords(rock_map)
+    rock_x, rock_y = rover_coords(rock_map)
+    Rover.rock_dist, Rover.rock_ang = to_polar_coords(rock_x, rock_y)
+    if np.count_nonzero(Rover.rock_ang) < 5:
+        Rover.rock_ang = None
+    if rock_map.any(): # gives True if at least 1 element of rock_map is True, otherwise False
 
         rock_x_world, rock_y_world = pix_to_world(rock_x, rock_y, Rover.pos[0], Rover.pos[1], Rover.yaw, world_size, scale)
-        rock_dist, rock_ang = to_polar_coords(rock_x, rock_y)
-        rock_idx = np.argmin(rock_dist) # minimum distance rock pixel
+        rock_idx = np.argmin(Rover.rock_dist) # minimum distance rock pixel
         rock_xcen = rock_x_world[rock_idx]
         rock_ycen = rock_y_world[rock_idx]
 
