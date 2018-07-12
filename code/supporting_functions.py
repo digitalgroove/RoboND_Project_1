@@ -50,11 +50,11 @@ def update_rover(Rover, data):
       # Update number of rocks collected
       Rover.samples_collected = Rover.samples_to_find - np.int(data["sample_count"])
 
-      print('speed =',Rover.vel, 'position =', Rover.pos, 'throttle =', 
-      Rover.throttle, 'steer_angle =', Rover.steer, 'near_sample:', Rover.near_sample, 
-      'picking_up:', data["picking_up"], 'sending pickup:', Rover.send_pickup, 
-      'total time:', Rover.total_time, 'samples remaining:', data["sample_count"], 
-      'samples collected:', Rover.samples_collected)
+      print('speed =',Rover.vel, 'position =', Rover.pos, 'throttle =',
+      Rover.throttle, 'steer_angle =', Rover.steer, 'near_sample:', Rover.near_sample,
+      'picking_up:', data["picking_up"], 'sending pickup:', Rover.send_pickup,
+      'total time:', Rover.total_time, 'samples remaining:', data["sample_count"],
+      'samples collected:', Rover.samples_collected, '\n')
       # Get the current image from the center camera of the rover
       imgString = data["image"]
       image = Image.open(BytesIO(base64.b64decode(imgString)))
@@ -128,17 +128,21 @@ def create_output_images(Rover):
       # Flip the map for plotting so that the y-axis points upward in the display
       map_add = np.flipud(map_add).astype(np.float32)
       # Add some text about map and rock sample detection results
-      cv2.putText(map_add,"Time: "+str(np.round(Rover.total_time, 1))+' s', (0, 10), 
+      cv2.putText(map_add,"Time: "+str(np.round(Rover.total_time, 1))+' s', (0, 10),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
-      cv2.putText(map_add,"Mapped: "+str(perc_mapped)+'%', (0, 25), 
+      cv2.putText(map_add,"Mapped: "+str(perc_mapped)+'%', (0, 25),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
-      cv2.putText(map_add,"Fidelity: "+str(fidelity)+'%', (0, 40), 
+      cv2.putText(map_add,"Fidelity: "+str(fidelity)+'%', (0, 40),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
-      cv2.putText(map_add,"Rocks", (0, 55), 
+      cv2.putText(map_add,"Rocks", (0, 55),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
-      cv2.putText(map_add,"  Located: "+str(samples_located), (0, 70), 
+      cv2.putText(map_add,"  Located: "+str(samples_located), (0, 70),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
-      cv2.putText(map_add,"  Collected: "+str(Rover.samples_collected), (0, 85), 
+      cv2.putText(map_add,"  Collected: "+str(Rover.samples_collected), (0, 85),
+                  cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
+      cv2.putText(map_add,"Mode: "+str(Rover.mode), (0, 100),
+                  cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
+      cv2.putText(map_add,"Action: "+str(Rover.action), (0, 115),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
       # Convert map and vision image to base64 strings for sending to server
       pil_img = Image.fromarray(map_add.astype(np.uint8))
@@ -152,6 +156,3 @@ def create_output_images(Rover):
       encoded_string2 = base64.b64encode(buff.getvalue()).decode("utf-8")
 
       return encoded_string1, encoded_string2
-
-
-
