@@ -12,10 +12,28 @@ def decision_step(Rover):
     # Example:
     # Check if we have vision data to make decisions with
     if Rover.nav_angles is not None:
-        # Check for Rover.mode status
         if Rover.mode == 'forward':
-            # Check the extent of navigable terrain
-            if len(Rover.nav_angles) >= Rover.stop_forward:
+            # Check for rocks
+            if np.count_nonzero(Rover.rock_ang) > 1 and not Rover.collected:
+                Rover.mode = 'Go to rock'
+                # Set steering to average angle clipped to the range +/- 15
+                Rover.steer = np.clip(np.mean(Rover.rock_ang * 180/np.pi), -15, 15)
+                if Rover.vel > 0.6:
+                    Rover.action = 'breaking'
+                    Rover.throttle = 0
+                    Rover.brake = Rover.brake_set
+                    Rover.steer = 0
+                if Rover.vel < 0.4:
+                    Rover.action = 'throttle to rock'
+                    # Set throttle value to throttle setting
+                    Rover.brake = 0
+                    Rover.throttle = 0.1
+                else: # Else coast
+                    Rover.action = 'coast to rock'
+                    Rover.brake = 0
+                    Rover.throttle = 0
+            # If no rocks where found check the extent of navigable terrain
+            elif len(Rover.nav_angles) >= Rover.stop_forward:
                 # If mode is forward, navigable terrain looks good
                 # and velocity is below max, then throttle
                 if Rover.vel < Rover.max_vel:
@@ -68,13 +86,26 @@ def decision_step(Rover):
                     Rover.mode = 'forward'
     # Just to make the rover do something
     # even if no modifications have been made to the code
+        else:
+            Rover.elsecounter += 1 # for debugging
+            Rover.action = 'else 1...'
+            if Rover.mode == 'Go to rock':
+                Rover.steer = Rover.steer_cache
+                if Rover.elsecounter > 10:
+                    Rover.mode = 'forward'
+                    Rover.elsecounter = 0
     else:
+        Rover.action = 'else 2...'
         Rover.throttle = Rover.throttle_set
         Rover.steer = 0
         Rover.brake = 0
+        Rover.mode = 'forward'
 
     # If in a state where want to pickup a rock send pickup command
     if Rover.near_sample and Rover.vel == 0 and not Rover.picking_up:
         Rover.send_pickup = True
+        Rover.mode = 'forward'
+        Rover.rock_ang = None
+        Rover.collected = True
 
     return Rover

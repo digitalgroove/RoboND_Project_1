@@ -107,6 +107,7 @@ def create_output_images(Rover):
                         samples_located += 1
                         map_add[test_rock_y-rock_size:test_rock_y+rock_size, 
                         test_rock_x-rock_size:test_rock_x+rock_size, :] = 255
+                        Rover.collected = False #if a new rock is added to map
 
       # Calculate some statistics on the map results
       # First get the total number of pixels in the navigable terrain map
@@ -143,6 +144,8 @@ def create_output_images(Rover):
       cv2.putText(map_add,"Mode: "+str(Rover.mode), (0, 100),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
       cv2.putText(map_add,"Action: "+str(Rover.action), (0, 115),
+                  cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
+      cv2.putText(map_add,"else1 counter: "+str(Rover.elsecounter), (0, 130),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
       # Convert map and vision image to base64 strings for sending to server
       pil_img = Image.fromarray(map_add.astype(np.uint8))
