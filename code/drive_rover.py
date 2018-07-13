@@ -52,13 +52,13 @@ class RoverState():
         self.brake = 0 # Current brake value
         self.nav_angles = None # Angles of navigable terrain pixels
         self.nav_dists = None # Distances of navigable terrain pixels
-        self.obs_angles = None # Angles of obstacle pixels 
+        self.obs_angles = None # Angles of obstacle pixels
         self.obs_dists = None # Distances of obstacle pixels
         self.rock_ang = None # Angles of rock pixels
         self.rock_dist = None # Distances of rock pixels
         self.ground_truth = ground_truth_3d # Ground truth worldmap
         self.mode = 'forward' # Current mode (can be forward or stop)
-        self.throttle_set = 0.2 # Throttle setting when accelerating
+        self.throttle_set = 0.5 # Throttle setting when accelerating
         self.brake_set = 10 # Brake setting when braking
         # The stop_forward and go_forward fields below represent total count
         # of navigable terrain pixels.  This is a very crude form of knowing

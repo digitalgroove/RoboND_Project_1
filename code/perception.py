@@ -107,7 +107,7 @@ def mask_navigable(nav_binary):
     H_start_percent = 0 # percent value
     H_end_percent = 60 # percent value
     V_start_percent = 0 # percent value
-    V_end_percent = 85 # percent value
+    V_end_percent = 90 # percent value
 
     driving_mask = np.zeros((nav_binary.shape[0], nav_binary.shape[1])) # initialize matrix of zeros
 
