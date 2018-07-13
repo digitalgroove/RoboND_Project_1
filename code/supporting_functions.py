@@ -9,7 +9,7 @@ import time
 def convert_to_float(string_to_convert):
       if ',' in string_to_convert:
             float_value = np.float(string_to_convert.replace(',','.'))
-      else: 
+      else:
             float_value = np.float(string_to_convert)
       return float_value
 
@@ -70,7 +70,7 @@ def create_output_images(Rover):
       if np.max(Rover.worldmap[:,:,2]) > 0:
             nav_pix = Rover.worldmap[:,:,2] > 0
             navigable = Rover.worldmap[:,:,2] * (255 / np.mean(Rover.worldmap[nav_pix, 2]))
-      else: 
+      else:
             navigable = Rover.worldmap[:,:,2]
       if np.max(Rover.worldmap[:,:,0]) > 0:
             obs_pix = Rover.worldmap[:,:,0] > 0
@@ -93,7 +93,7 @@ def create_output_images(Rover):
       # to confirm whether detections are real
       samples_located = 0
       if rock_world_pos[0].any():
-            
+
             rock_size = 2
             for idx in range(len(Rover.samples_pos[0])):
                   test_rock_x = Rover.samples_pos[0][idx]
@@ -105,7 +105,7 @@ def create_output_images(Rover):
                   # sample on the map
                   if np.min(rock_sample_dists) < 3:
                         samples_located += 1
-                        map_add[test_rock_y-rock_size:test_rock_y+rock_size, 
+                        map_add[test_rock_y-rock_size:test_rock_y+rock_size,
                         test_rock_x-rock_size:test_rock_x+rock_size, :] = 255
                         Rover.collected = False #if a new rock is added to map
 
@@ -120,7 +120,7 @@ def create_output_images(Rover):
       tot_map_pix = np.float(len((Rover.ground_truth[:,:,1].nonzero()[0])))
       # Calculate the percentage of ground truth map that has been successfully found
       perc_mapped = round(100*good_nav_pix/tot_map_pix, 1)
-      # Calculate the number of good map pixel detections divided by total pixels 
+      # Calculate the number of good map pixel detections divided by total pixels
       # found to be navigable terrain
       if tot_nav_pix > 0:
             fidelity = round(100*good_nav_pix/(tot_nav_pix), 1)
@@ -145,14 +145,12 @@ def create_output_images(Rover):
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
       cv2.putText(map_add,"Action: "+str(Rover.action), (0, 115),
                   cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
-      cv2.putText(map_add,"else1 counter: "+str(Rover.elsecounter), (0, 130),
-                  cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
       # Convert map and vision image to base64 strings for sending to server
       pil_img = Image.fromarray(map_add.astype(np.uint8))
       buff = BytesIO()
       pil_img.save(buff, format="JPEG")
       encoded_string1 = base64.b64encode(buff.getvalue()).decode("utf-8")
-      
+
       pil_img = Image.fromarray(Rover.vision_image.astype(np.uint8))
       buff = BytesIO()
       pil_img.save(buff, format="JPEG")

@@ -45,6 +45,12 @@ def decision_step(Rover):
                     Rover.action = 'throttle'
                     # Set throttle value to throttle setting
                     Rover.throttle = Rover.throttle_set
+                    if Rover.vel < 0.1:
+                        Rover.navthrottle_timeout += 1
+                        if Rover.navthrottle_timeout > 100:
+                            Rover.mode = 'unstuck'
+                            Rover.navthrottle_timeout = 0
+                            Rover.unstuck_timeout = 0
                 else: # Else coast
                     Rover.throttle = 0
                     Rover.action = 'coast'
@@ -62,7 +68,7 @@ def decision_step(Rover):
                     Rover.mode = 'stop'
 
         # If we're already in "stop" mode then make different decisions
-        elif Rover.mode == 'stop':   #could be else
+        elif Rover.mode == 'stop':
             # If we're in stop mode but still moving keep braking
             if Rover.vel > 0.2:
                 Rover.action = 'braking'
@@ -91,6 +97,25 @@ def decision_step(Rover):
                     Rover.mode = 'forward'
     # Just to make the rover do something
     # even if no modifications have been made to the code
+        elif Rover.mode == 'unstuck':
+            # If we're in stop mode but still moving keep braking
+            Rover.unstuck_timeout += 1 # for debugging
+            if Rover.unstuck_timeout < 60:
+                Rover.action = 'reversing'
+                Rover.throttle = -1
+                Rover.brake = 0
+                Rover.steer = 15
+            elif Rover.unstuck_timeout < 65:
+                Rover.throttle = 0
+                Rover.brake = Rover.brake_set
+            elif Rover.unstuck_timeout < 100:
+                Rover.action = 'pushing'
+                Rover.brake = 0
+                Rover.throttle = 2
+                Rover.steer = 0
+            else:
+                Rover.mode = 'forward'
+                Rover.unstuck_timeout = 0
         else:
             Rover.rock_timeout += 1 # for debugging
             if Rover.mode == 'Go to rock':
