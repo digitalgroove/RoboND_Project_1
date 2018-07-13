@@ -19,9 +19,9 @@ def decision_step(Rover):
                 # Set steering to average angle clipped to the range +/- 15
                 Rover.steer = np.clip(np.mean(Rover.rock_ang * 180/np.pi), -15, 15)
                 if Rover.vel > 0.8:
-                    Rover.action = 'breaking'
+                    Rover.action = 'brake near rock'
                     Rover.throttle = 0
-                    Rover.brake = Rover.brake_set
+                    Rover.brake = 1
                     Rover.steer = 0
                 elif Rover.vel < 0.4:
                     Rover.action = 'throttle to rock'
@@ -33,7 +33,7 @@ def decision_step(Rover):
                     Rover.brake = 0
                     Rover.throttle = 0
                 if Rover.near_sample:
-                    Rover.action = 'breaking'
+                    Rover.action = 'brake'
                     Rover.throttle = 0
                     Rover.brake = Rover.brake_set
                     Rover.steer = 0
@@ -66,7 +66,7 @@ def decision_step(Rover):
         elif Rover.mode == 'stop':   #could be else
             # If we're in stop mode but still moving keep braking
             if Rover.vel > 0.2:
-                Rover.action = 'breaking'
+                Rover.action = 'braking'
                 Rover.throttle = 0
                 Rover.brake = Rover.brake_set
                 Rover.steer = 0
@@ -97,8 +97,8 @@ def decision_step(Rover):
             Rover.action = 'else 1...'
             if Rover.mode == 'Go to rock':
                 Rover.steer = Rover.steer_cache
-                if Rover.vel > 0.6:
-                    Rover.action = 'else 1 breaking'
+                if Rover.vel > 0.6 or Rover.near_sample:
+                    Rover.action = 'Brake near sample'
                     Rover.throttle = 0
                     Rover.brake = Rover.brake_set
                     Rover.steer = 0
