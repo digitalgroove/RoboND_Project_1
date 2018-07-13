@@ -92,7 +92,7 @@ def decision_step(Rover):
     # Just to make the rover do something
     # even if no modifications have been made to the code
         else:
-            Rover.elsecounter += 1 # for debugging
+            Rover.rock_timeout += 1 # for debugging
             if Rover.mode == 'Go to rock':
                 Rover.steer = Rover.steer_cache
                 if Rover.vel > 1 or Rover.near_sample:
@@ -107,9 +107,9 @@ def decision_step(Rover):
                     Rover.action = 'Coast near sample'
                     Rover.brake = 0
 
-                if Rover.elsecounter > 60:
+                if Rover.rock_timeout > 60:
                     Rover.mode = 'forward'
-                    Rover.elsecounter = 0
+                    Rover.rock_timeout = 0
     else:
         Rover.action = 'undetermined'
         Rover.throttle = Rover.throttle_set

@@ -84,7 +84,7 @@ class RoverState():
         self.send_pickup = False # Set to True to trigger rock pickup
         self.action = '' # state machine
         self.collected = False # Flag
-        self.elsecounter = 0
+        self.rock_timeout = 0
         self.steer_cache = None # To store angle to rock
 # Initialize our rover
 Rover = RoverState()
