@@ -111,9 +111,9 @@ def mask_navigable(nav_binary):
 
     driving_mask = np.zeros((nav_binary.shape[0], nav_binary.shape[1])) # initialize matrix of zeros
 
-    H_start_col = int(round(remap_values(H_start_percent, 0, 100, 0, 0)))
+    H_start_col = int(round(remap_values(H_start_percent, 0, 100, 0, nav_binary.shape[1])))
     H_end_col = int(round(remap_values(H_end_percent, 0, 100, 0, nav_binary.shape[1])))
-    V_start_col = int(round(remap_values(V_start_percent, 0, 100, 0, 0)))
+    V_start_col = int(round(remap_values(V_start_percent, 0, 100, 0, nav_binary.shape[0])))
     V_end_col = int(round(remap_values(V_end_percent, 0, 100, 0, nav_binary.shape[0])))
     driving_mask[V_start_col:V_end_col,H_start_col:H_end_col] = 1 # select range of rows and columns
 
