@@ -102,7 +102,7 @@ def remap_values(value, inMin, inMax, outMin, outMax):
     return outMin + (valueScaled * outSpan)
 
 # Define a function to mask the navigable terrain pixels
-def mask_navigable(nav_binary):
+def mask_selection(nav_binary):
 
     H_start_percent = 0 # percent value
     H_end_percent = 60 # percent value
@@ -146,13 +146,14 @@ def perception_step(Rover):
     rgb_obs_max = (170,170,170)
     threshed_obstacles = color_thresh(warped,rgb_obs_min, rgb_obs_max)
 
-    rgb_rock_min = (110, 110, 5)
-    rgb_rock_max = (210, 210, 145)
+    rgb_rock_min = (110,110, 0)
+    rgb_rock_max = (210, 210, 50)
     threshed_rocks = color_thresh(warped, rgb_rock_min, rgb_rock_max)
 
     obs_map = np.float32(threshed_obstacles) * mask
 
-    navigable_masked = mask_navigable(navigable_threshed)
+    navigable_masked = mask_selection(navigable_threshed)
+    rocks_masked = mask_selection(threshed_rocks)
 
     # 4) Update Rover.vision_image (this will be displayed on left side of screen)
         # Example: Rover.vision_image[:,:,0] = obstacle color-thresholded binary image
@@ -201,12 +202,12 @@ def perception_step(Rover):
     Rover.obs_angles = angles_obs
 
     #See if we can find some rocks
-    rock_map = find_rocks(warped, levels=(110,110,50))
-    rock_x, rock_y = rover_coords(rock_map)
+    #rock_map = find_rocks(warped, levels=(110,110,50))
+    rock_x, rock_y = rover_coords(rocks_masked)
     Rover.rock_dist, Rover.rock_ang = to_polar_coords(rock_x, rock_y)
     if np.count_nonzero(Rover.rock_ang) < 3:
         Rover.rock_ang = None
-    if rock_map.any(): # gives True if at least 1 element of rock_map is True, otherwise False
+    if rocks_masked.any(): # gives True if at least 1 element of rocks_masked is True, otherwise False
 
         rock_x_world, rock_y_world = pix_to_world(rock_x, rock_y, Rover.pos[0], Rover.pos[1], Rover.yaw, world_size, scale)
         rock_idx = np.argmin(Rover.rock_dist) # minimum distance rock pixel
@@ -216,7 +217,7 @@ def perception_step(Rover):
             Rover.steer_cache = np.clip(np.mean(Rover.rock_ang * 180/np.pi), -15, 15)
 
         Rover.worldmap[rock_ycen,rock_xcen, 1] = 255 # update the rover world map to be 255 at that center point
-        Rover.vision_image[:,:,1] = rock_map * 255 # put those rock pixels onto the vision image
+        Rover.vision_image[:,:,1] = rocks_masked * 255 # put those rock pixels onto the vision image
     else:
         Rover.vision_image[:,:,1] = 0
 
