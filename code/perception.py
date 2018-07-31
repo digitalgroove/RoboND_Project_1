@@ -109,15 +109,15 @@ def mask_selection(nav_binary):
     V_start_percent = 0 # percent value
     V_end_percent = 90 # percent value
 
-    driving_mask = np.zeros((nav_binary.shape[0], nav_binary.shape[1])) # initialize matrix of zeros
+    driving_mask = np.zeros((nav_binary.shape[0], nav_binary.shape[1])) # init matrix of zeros
 
     H_start_col = int(round(remap_values(H_start_percent, 0, 100, 0, nav_binary.shape[1])))
     H_end_col = int(round(remap_values(H_end_percent, 0, 100, 0, nav_binary.shape[1])))
     V_start_col = int(round(remap_values(V_start_percent, 0, 100, 0, nav_binary.shape[0])))
     V_end_col = int(round(remap_values(V_end_percent, 0, 100, 0, nav_binary.shape[0])))
-    driving_mask[V_start_col:V_end_col,H_start_col:H_end_col] = 1 # select range of rows and columns
+    driving_mask[V_start_col:V_end_col,H_start_col:H_end_col] = 1 # select rows & cols
 
-    mask_nav = nav_binary * driving_mask
+    mask_nav = nav_binary * driving_mask # apply mask
 
     return mask_nav
 
@@ -202,7 +202,6 @@ def perception_step(Rover):
     Rover.obs_angles = angles_obs
 
     #See if we can find some rocks
-    #rock_map = find_rocks(warped, levels=(110,110,50))
     rock_x, rock_y = rover_coords(rocks_masked)
     Rover.rock_dist, Rover.rock_ang = to_polar_coords(rock_x, rock_y)
     if np.count_nonzero(Rover.rock_ang) < 3:
