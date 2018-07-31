@@ -16,17 +16,25 @@ def decision_step(Rover):
             # Check for rocks
             if np.count_nonzero(Rover.rock_ang) > 1 and not Rover.collected:
                 Rover.mode = 'Go to rock'
+                Rover.rock_timeout = 0
                 # Set steering to average angle clipped to the range +/- 15
                 Rover.steer = np.clip(np.mean(Rover.rock_ang * 180/np.pi), -15, 15)
-                if Rover.vel > 1:
+                if Rover.vel > 1.2:
                     Rover.action = 'brake near rock'
                     Rover.throttle = 0
                     Rover.brake = 1
-                elif Rover.vel < 0.4:
+                elif Rover.vel < 0.2:
                     Rover.action = 'throttle to rock'
                     # Set throttle value to throttle setting
                     Rover.brake = 0
                     Rover.throttle = 0.2
+                    if Rover.vel < 0.1:
+                        Rover.navthrottle_timeout += 1
+                        if Rover.navthrottle_timeout > 80:
+                            Rover.mode = 'unstuck'
+                            Rover.navthrottle_timeout = 0
+                    else:
+                        Rover.navthrottle_timeout = 0
                 else: # Else coast
                     Rover.action = 'coast to rock'
                     Rover.brake = 0
@@ -50,7 +58,8 @@ def decision_step(Rover):
                         if Rover.navthrottle_timeout > 100:
                             Rover.mode = 'unstuck'
                             Rover.navthrottle_timeout = 0
-                            Rover.unstuck_timeout = 0
+                    else:
+                        Rover.navthrottle_timeout = 0
                 else: # Else coast
                     Rover.throttle = 0
                     Rover.action = 'coast'
@@ -100,30 +109,27 @@ def decision_step(Rover):
         elif Rover.mode == 'unstuck':
             # If we're in stop mode but still moving keep braking
             Rover.unstuck_timeout += 1 # for debugging
-            if Rover.unstuck_timeout < 60:
+            if Rover.unstuck_timeout < 30:
                 Rover.action = 'reversing'
                 Rover.throttle = -1
                 Rover.brake = 0
-                Rover.steer = 15
-            elif Rover.unstuck_timeout < 65:
+                Rover.steer = 0
+            elif Rover.unstuck_timeout < 35:
                 Rover.throttle = 0
                 Rover.brake = Rover.brake_set
-            elif Rover.unstuck_timeout < 100:
-                Rover.action = 'pushing'
-                Rover.brake = 0
-                Rover.throttle = 2
-                Rover.steer = 0
             else:
-                Rover.mode = 'forward'
                 Rover.unstuck_timeout = 0
+                Rover.navthrottle_timeout = 0
+                Rover.mode = 'forward'
+
         else:
-            Rover.rock_timeout += 1 # for debugging
+            Rover.rock_timeout += 1 # to keep going to rock
             if Rover.mode == 'Go to rock':
                 Rover.steer = Rover.steer_cache
-                if Rover.vel > 1 or Rover.near_sample:
+                if Rover.vel > 1.2 or Rover.near_sample:
                     Rover.action = 'Brake near sample'
                     Rover.throttle = 0
-                    Rover.brake = Rover.brake_set
+                    Rover.brake = 0.2
                 elif Rover.vel < 0.2 and not Rover.near_sample:
                     Rover.action = 'Throttle near sample'
                     Rover.throttle = 1
@@ -132,7 +138,7 @@ def decision_step(Rover):
                     Rover.action = 'Coast near sample'
                     Rover.brake = 0
 
-                if Rover.rock_timeout > 60:
+                if Rover.rock_timeout > 80:
                     Rover.mode = 'forward'
                     Rover.rock_timeout = 0
     else:
